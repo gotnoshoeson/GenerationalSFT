@@ -1,4 +1,4 @@
-# 🏗 FanSociety - it's like GoFundMe for musicians.
+# 🎫 💑 FanSociety - it's like GoFundMe for musicians, decentralized.
 
 FanSociety Manifesto
 
