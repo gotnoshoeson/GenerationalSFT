@@ -1,4 +1,4 @@
-import { Button, Col, Menu, Row } from "antd";
+import { Button, Card, Col, Input, Menu, Row } from "antd";
 import "antd/dist/antd.css";
 import {
   useBalance,
@@ -14,6 +14,7 @@ import { Link, Route, Switch, useLocation } from "react-router-dom";
 import "./App.css";
 import {
   Account,
+  Balance,
   Contract,
   Faucet,
   GasGauge,
@@ -167,7 +168,19 @@ function App(props) {
   ]);
 
   // keep track of a variable from the contract in the local React state:
-  const purpose = useContractReader(readContracts, "YourContract", "purpose");
+  //const purpose = useContractReader(readContracts, "YourContract", "purpose");
+
+  // keep track of a variable from the contract in the local React state:
+  const activeGeneration = useContractReader(readContracts, "FanSocietyMother", "activeGeneration");
+  console.log("activeGeneration", activeGeneration ? activeGeneration.toSring() : "...");
+
+
+  // const contractAddress = readContracts && readContracts.FanSocietyMother && readContracts.FanSocietyMother.address;
+
+
+  // const yourTokenBalance = useContractReader(readContracts, "FanSocietyMother", "balanceOf", [address], [tokenId]);
+  // console.log("🏵 yourTokenBalance:", yourTokenBalance ? ethers.utils.formatEther(yourTokenBalance) : "...");
+
 
   /*
   const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
@@ -244,6 +257,22 @@ function App(props) {
 
   const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
 
+  const [tokenBuyAmount, setTokenBuyAmount] = useState({
+    valid: false,
+    value: ''
+  });
+
+  const tokenFee = useContractReader(readContracts, "FanSocietyMother", "tokenFee");
+  console.log("🏦 tokenFee:", tokenFee ? tokenFee.toString() : "...");
+
+  const ethCostToPurchaseTokens =
+    tokenBuyAmount.valid && tokenFee && ethers.utils.parseEther("" + tokenBuyAmount.value / parseFloat(tokenFee));
+  console.log("ethCostToPurchaseTokens:", ethCostToPurchaseTokens);
+
+  const [buying, setBuying] = useState();
+
+
+
   return (
     <div className="App">
       {/* ✏️ Edit the header and change the title to your project name */}
@@ -263,7 +292,7 @@ function App(props) {
         <Menu.Item key="/debug">
           <Link to="/debug">Debug Contracts</Link>
         </Menu.Item>
-        <Menu.Item key="/hints">
+        {/* <Menu.Item key="/hints">
           <Link to="/hints">Hints</Link>
         </Menu.Item>
         <Menu.Item key="/exampleui">
@@ -271,14 +300,54 @@ function App(props) {
         </Menu.Item>
         <Menu.Item key="/subgraph">
           <Link to="/subgraph">Subgraph</Link>
-        </Menu.Item>
+        </Menu.Item> */}
       </Menu>
 
       <Switch>
         <Route exact path="/">
           {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
           <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} />
+
+          {/*BUY SFT UI */}
+          <div style={{ padding: 8, marginTop: 32, width: 300, margin: "auto" }}>
+              <Card title="Buy Tokens" extra={<a href="#">code</a>}>
+                <div style={{ padding: 8 }}>{tokenFee && tokenFee.toNumber()} ETH per Token</div>
+                <div style={{ padding: 8 }}>
+                  <Input
+                    style={{ textAlign: "center" }}
+                    placeholder={"amount of tokens to buy"}
+                    value={tokenBuyAmount.value}
+                    onChange={e => {
+                      const newValue = e.target.value.startsWith(".") ? "0." : e.target.value;
+                      const buyAmount = {
+                        value: newValue,
+                        valid: /^\d*\.?\d+$/.test(newValue)
+                      }
+                      setTokenBuyAmount(buyAmount);
+                    }}
+                  />
+                  <Balance balance={ethCostToPurchaseTokens} dollarMultiplier={price} />
+                </div>
+
+                <div style={{ padding: 8 }}>
+                  <Button
+                    type={"primary"}
+                    loading={buying}
+                    onClick={async () => {
+                      setBuying(true);
+                      await tx(writeContracts.FanSocietyMother.mint({ value: ethCostToPurchaseTokens }));
+                      setBuying(false);
+                    }}
+                    disabled={!tokenBuyAmount.valid}
+                  >
+                    Buy Tokens
+                  </Button>
+                </div>
+              </Card>
+            </div>
         </Route>
+
+
         <Route exact path="/debug">
           {/*
                 🎛 this scaffolding is full of commonly used components
@@ -302,20 +371,6 @@ function App(props) {
             yourLocalBalance={yourLocalBalance}
             mainnetProvider={mainnetProvider}
             price={price}
-          />
-        </Route>
-        <Route path="/exampleui">
-          <ExampleUI
-            address={address}
-            userSigner={userSigner}
-            mainnetProvider={mainnetProvider}
-            localProvider={localProvider}
-            yourLocalBalance={yourLocalBalance}
-            price={price}
-            tx={tx}
-            writeContracts={writeContracts}
-            readContracts={readContracts}
-            purpose={purpose}
           />
         </Route>
         <Route path="/mainnetdai">
