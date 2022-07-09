@@ -271,6 +271,14 @@ function App(props) {
 
   const [buying, setBuying] = useState();
 
+  const currentGeneration = useContractReader(readContracts, "FanSocietyMother", "activeGenerationId");
+
+  /*const mint = async () => {
+    const result = tx(
+      writeContracts && writeContracts.FanSocietyMother && writeContracts.FanSocietyMother.mint()
+    )
+  }
+*/
 
 
   return (
@@ -311,36 +319,21 @@ function App(props) {
           {/*BUY SFT UI */}
           <div style={{ padding: 8, marginTop: 32, width: 300, margin: "auto" }}>
               <Card title="Buy Tokens" extra={<a href="#">code</a>}>
-                <div style={{ padding: 8 }}>{tokenFee && tokenFee.toNumber()} ETH per Token</div>
                 <div style={{ padding: 8 }}>
-                  <Input
-                    style={{ textAlign: "center" }}
-                    placeholder={"amount of tokens to buy"}
-                    value={tokenBuyAmount.value}
-                    onChange={e => {
-                      const newValue = e.target.value.startsWith(".") ? "0." : e.target.value;
-                      const buyAmount = {
-                        value: newValue,
-                        valid: /^\d*\.?\d+$/.test(newValue)
-                      }
-                      setTokenBuyAmount(buyAmount);
-                    }}
-                  />
-                  <Balance balance={ethCostToPurchaseTokens} dollarMultiplier={price} />
-                </div>
-
-                <div style={{ padding: 8 }}>
+                  <p>Currently minting generation #{currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</p>
                   <Button
                     type={"primary"}
-                    loading={buying}
                     onClick={async () => {
-                      setBuying(true);
-                      await tx(writeContracts.FanSocietyMother.mint({ value: ethCostToPurchaseTokens }));
-                      setBuying(false);
+                      const priceRightNow = await readContracts.FanSocietyMother.tokenFee();
+                      try {
+                        const txCur = await tx(writeContracts.FanSocietyMother.mint({ value: priceRightNow, gasLimit: 300000 }));
+                        await txCur.wait();
+                      } catch (e) {
+                        console.log("mint failed", e);
+                      }
                     }}
-                    disabled={!tokenBuyAmount.valid}
                   >
-                    Buy Tokens
+                    MINT for {tokenFee && (+ethers.utils.formatEther(tokenFee)).toFixed(4)}
                   </Button>
                 </div>
               </Card>
@@ -363,44 +356,6 @@ function App(props) {
             address={address}
             blockExplorer={blockExplorer}
             contractConfig={contractConfig}
-          />
-        </Route>
-        <Route path="/hints">
-          <Hints
-            address={address}
-            yourLocalBalance={yourLocalBalance}
-            mainnetProvider={mainnetProvider}
-            price={price}
-          />
-        </Route>
-        <Route path="/mainnetdai">
-          <Contract
-            name="DAI"
-            customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.DAI}
-            signer={userSigner}
-            provider={mainnetProvider}
-            address={address}
-            blockExplorer="https://etherscan.io/"
-            contractConfig={contractConfig}
-            chainId={1}
-          />
-          {/*
-            <Contract
-              name="UNI"
-              customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.UNI}
-              signer={userSigner}
-              provider={mainnetProvider}
-              address={address}
-              blockExplorer="https://etherscan.io/"
-            />
-            */}
-        </Route>
-        <Route path="/subgraph">
-          <Subgraph
-            subgraphUri={props.subgraphUri}
-            tx={tx}
-            writeContracts={writeContracts}
-            mainnetProvider={mainnetProvider}
           />
         </Route>
       </Switch>

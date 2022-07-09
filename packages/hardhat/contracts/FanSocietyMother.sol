@@ -13,8 +13,8 @@ contract FanSocietyMother is ERC1155 {
     // Below is used as the URI for all token types relying on ID substitution, e.g. https://ipfs/<hash>/{id}.json
     // string private _uri;
 
-    uint256 public activeGenerationId; 
-    uint256 public tokenFee;
+    uint256 public activeGenerationId = 0; 
+    uint256 public tokenFee = 1 * 10 ** 17 ;
 
     //mapping(uint256 => string) = tokenURI;
 
@@ -23,7 +23,7 @@ contract FanSocietyMother is ERC1155 {
 
     constructor() ERC1155("") {
         // Set tokenFee to .1 ETH
-        tokenFee == 1 * 10**(18-1);
+        //tokenFee == 1 * 10**(18-1);
     }
 
     // Create a new fan generation, ie create new _ids, increment current token id variable += 1, require an amount of time from previous generation creation, ie 6 months.
@@ -35,13 +35,14 @@ contract FanSocietyMother is ERC1155 {
     }
 
     // mint token of the current generation for the current mint fee
-    function mint (uint256 _mintTokenAmount) public payable {
-        uint256 payment = tokenFee * _mintTokenAmount;
+    function mint () public payable {
+        uint8 amount = 1;
+        uint256 payment = tokenFee;
         require(msg.value >= payment, "Send more Eth");
-        _mint(msg.sender, activeGenerationId, _mintTokenAmount, "");
+        _mint(msg.sender, activeGenerationId, amount, "");
         (bool sent, ) = msg.sender.call{value: payment}("");
         require(sent, "Not enough eth sent");
-        emit FanPinMinted(msg.sender, activeGenerationId, _mintTokenAmount);
+        emit FanPinMinted(msg.sender, activeGenerationId, amount);
      }  
 
     // Raffle based on an array [] of _ids, ie Generation 1 - 3 are included in this raffle, needs an argument for how many winners will be selected
