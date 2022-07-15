@@ -3,7 +3,7 @@
 //import { utils } from "ethers";
 //import { SyncOutlined } from "@ant-design/icons";
 
-import { Events } from "../components";
+import { List } from "antd";
 
 export default function Home({
   //purpose,
@@ -20,15 +20,7 @@ export default function Home({
   //const [fanPinMinted, ] = useState("loading...");
 
   return (
-    <div>
-      <Events
-      contracts={readContracts}
-      contractName="FanSocietyMother"
-      eventName="FanPinMinted"
-      localProvider={localProvider}
-      mainnetProvider={mainnetProvider}
-      startBlock={1}
-      />
+    <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
     </div>
   )
 }

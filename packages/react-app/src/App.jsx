@@ -1,4 +1,4 @@
-import { Button, Card, Col, Input, Menu, Row } from "antd";
+import { Button, Card, Col, Input, List, Menu, Row } from "antd";
 import "antd/dist/antd.css";
 import {
   useBalance,
@@ -14,6 +14,7 @@ import { Link, Route, Switch, useLocation } from "react-router-dom";
 import "./App.css";
 import {
   Account,
+  Address,
   Balance,
   Contract,
   Faucet,
@@ -30,8 +31,9 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph } from "./views";
+import { Home } from "./views";
 import { useStaticJsonRPC } from "./hooks";
+import { useEventListener } from "eth-hooks/events/useEventListener";
 
 const { ethers } = require("ethers");
 /*
@@ -257,7 +259,7 @@ function App(props) {
 
   const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
 
-  const [tokenBuyAmount, setTokenBuyAmount] = useState({
+  const [tokenGenFee, setTokenGenFee] = useState({
     valid: false,
     value: ''
   });
@@ -265,11 +267,16 @@ function App(props) {
   const tokenFee = useContractReader(readContracts, "FanSocietyMother", "tokenFee");
   console.log("🏦 tokenFee:", tokenFee ? tokenFee.toString() : "...");
 
-  const ethCostToPurchaseTokens =
-    tokenBuyAmount.valid && tokenFee && ethers.utils.parseEther("" + tokenBuyAmount.value / parseFloat(tokenFee));
-  console.log("ethCostToPurchaseTokens:", ethCostToPurchaseTokens);
 
+
+  // borrowed from other project, remove later
   const [buying, setBuying] = useState();
+
+
+  // listen for mint events
+  const mintEvents = useEventListener(readContracts, 'FanSocietyMother', 'FanPinMinted', localProvider, 1);
+  // listen for new generation events
+  const newGenEvents = useEventListener(readContracts, 'FanSocietyMother', 'NewGeneration', localProvider, 1);
 
   const currentGeneration = useContractReader(readContracts, "FanSocietyMother", "activeGenerationId");
 
@@ -297,6 +304,9 @@ function App(props) {
         <Menu.Item key="/">
           <Link to="/">App Home</Link>
         </Menu.Item>
+        <Menu.Item key="/owner">
+          <Link to="/owner">Owner</Link>
+        </Menu.Item>
         <Menu.Item key="/debug">
           <Link to="/debug">Debug Contracts</Link>
         </Menu.Item>
@@ -318,28 +328,93 @@ function App(props) {
 
           {/*BUY SFT UI */}
           <div style={{ padding: 8, marginTop: 32, width: 300, margin: "auto" }}>
-              <Card title="Buy Tokens" extra={<a href="#">code</a>}>
-                <div style={{ padding: 8 }}>
-                  <p>Currently minting generation #{currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</p>
-                  <Button
-                    type={"primary"}
-                    onClick={async () => {
-                      const priceRightNow = await readContracts.FanSocietyMother.tokenFee();
-                      try {
-                        const txCur = await tx(writeContracts.FanSocietyMother.mint({ value: priceRightNow, gasLimit: 300000 }));
-                        await txCur.wait();
-                      } catch (e) {
-                        console.log("mint failed", e);
-                      }
-                    }}
-                  >
-                    MINT for {tokenFee && (+ethers.utils.formatEther(tokenFee)).toFixed(4)}
-                  </Button>
-                </div>
-              </Card>
-            </div>
-        </Route>
+            <Card title="Buy Tokens" extra={<a href="#">code</a>}>
+              <div style={{ padding: 8 }}>
+                <p>Currently minting generation #{currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</p>
+                <Button
+                  type={"primary"}
+                  onClick={async () => {
+                    const priceRightNow = await readContracts.FanSocietyMother.tokenFee();
+                    try {
+                      const txCur = await tx(writeContracts.FanSocietyMother.mint({ value: priceRightNow, gasLimit: 300000 }));
+                      await txCur.wait();
+                    } catch (e) {
+                      console.log("mint failed", e);
+                    }
+                  }}
+                >
+                  MINT for {tokenFee && (+ethers.utils.formatEther(tokenFee)).toFixed(4)} Eth
+                </Button>
+              </div>
+            </Card>
+          </div>
 
+          <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
+            <div>Mint Events:</div>
+            <List
+              dataSource={mintEvents}
+              renderItem={item => {
+                return (
+                  <List.Item key={item.blockNumber}>
+                    <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} /> =>
+                    <Balance balance={item.args[2]} />
+                  </List.Item>
+                );
+              }}
+            />
+          </div>
+        </Route>
+            
+        <Route exact path="/owner">
+          <div style={{ padding: 8, marginTop: 32, width: 300, margin: "auto" }}>
+            <Card title="Create New Token Generation" extra={<a href="#">code</a>}>
+              <div style={{ padding: 8 }}>Current token generation: {currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</div>
+              <div style={{ padding: 8 }}>
+                <Input
+                  style={{ textAlign: "center" }}
+                  placeholder={"new token generation mint fee"}
+                  value={tokenGenFee.value}
+                  onChange={e => {
+                    const newValue = e.target.value.startsWith(".") ? "0." : e.target.value;
+                    const buyAmount = {
+                      value: newValue,
+                      valid: /^\d*\.?\d+$/.test(newValue)
+                    }
+                    setTokenGenFee(buyAmount);
+                  }}
+                />
+              </div>
+
+              <div style={{ padding: 8 }}>
+                <Button
+                  type={"primary"}
+                  loading={buying}
+                  onClick={async () => {
+                    setBuying(true);
+                    await tx(writeContracts.FanSocietyMother.createGeneration(ethers.utils.parseEther(tokenGenFee.value)));
+                    setBuying(false);
+                  }}
+                  disabled={!tokenGenFee.valid}
+                >
+                  Create New Gen
+                </Button>
+              </div>
+            </Card>
+          </div>
+          <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
+            <div>New Fan Generation Events:</div>
+            <List
+              dataSource={newGenEvents}
+              renderItem={item => {
+                return (
+                  <List.Item key={item.blockNumber}>
+                    <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} /> created Generation #{currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}
+                  </List.Item>
+                );
+              }}
+            />
+          </div>
+        </Route>
 
         <Route exact path="/debug">
           {/*
