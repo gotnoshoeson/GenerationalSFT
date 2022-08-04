@@ -174,14 +174,14 @@ function App(props) {
   //const purpose = useContractReader(readContracts, "YourContract", "purpose");
 
   // keep track of a variable from the contract in the local React state:
-  const activeGeneration = useContractReader(readContracts, "FanSocietyMother", "activeGeneration");
+  const activeGeneration = useContractReader(readContracts, "YourContract", "activeGeneration");
   console.log("activeGeneration", activeGeneration ? activeGeneration.toSring() : "...");
 
 
-  // const contractAddress = readContracts && readContracts.FanSocietyMother && readContracts.FanSocietyMother.address;
+  // const contractAddress = readContracts && readContracts.YourContract && readContracts.YourContract.address;
 
 
-  // const yourTokenBalance = useContractReader(readContracts, "FanSocietyMother", "balanceOf", [address], [tokenId]);
+  // const yourTokenBalance = useContractReader(readContracts, "YourContract", "balanceOf", [address], [tokenId]);
   // console.log("🏵 yourTokenBalance:", yourTokenBalance ? ethers.utils.formatEther(yourTokenBalance) : "...");
 
 
@@ -265,7 +265,7 @@ function App(props) {
     value: ''
   });
 
-  const tokenFee = useContractReader(readContracts, "FanSocietyMother", "tokenFee");
+  const tokenFee = useContractReader(readContracts, "YourContract", "tokenFee");
   console.log("🏦 tokenFee:", tokenFee ? tokenFee.toString() : "...");
 
 
@@ -275,16 +275,16 @@ function App(props) {
 
 
   // listen for mint events
-  const mintEvents = useEventListener(readContracts, 'FanSocietyMother', 'FanPinMinted', localProvider, 1);
+  const mintEvents = useEventListener(readContracts, 'YourContract', 'TokenMinted', localProvider, 1);
   // listen for new generation events
-  const newGenEvents = useEventListener(readContracts, 'FanSocietyMother', 'NewGeneration', localProvider, 1);
+  const newGenEvents = useEventListener(readContracts, 'YourContract', 'NewGeneration', localProvider, 1);
 
-  const currentGeneration = useContractReader(readContracts, "FanSocietyMother", "activeGenerationId");
+  const currentGeneration = useContractReader(readContracts, "YourContract", "activeGenerationId");
 
 
   /*const mint = async () => {
     const result = tx(
-      writeContracts && writeContracts.FanSocietyMother && writeContracts.FanSocietyMother.mint()
+      writeContracts && writeContracts.YourContract && writeContracts.YourContract.mint()
     )
   }
 */
@@ -336,9 +336,9 @@ function App(props) {
                 <Button
                   type={"primary"}
                   onClick={async () => {
-                    const priceRightNow = await readContracts.FanSocietyMother.tokenFee();
+                    const priceRightNow = await readContracts.YourContract.tokenFee();
                     try {
-                      const txCur = await tx(writeContracts.FanSocietyMother.mint({ value: priceRightNow, gasLimit: 300000 }));
+                      const txCur = await tx(writeContracts.YourContract.mint({ value: priceRightNow, gasLimit: 300000 }));
                       await txCur.wait();
                     } catch (e) {
                       console.log("mint failed", e);
@@ -376,7 +376,7 @@ function App(props) {
               <div style={{ padding: 8 }}>
                 <Input
                   style={{ textAlign: "center" }}
-                  placeholder={"new token generation mint fee"}
+                  placeholder={"new generation token fee"}
                   value={tokenGenFee.value}
                   onChange={e => {
                     const newValue = e.target.value.startsWith(".") ? "0." : e.target.value;
@@ -395,7 +395,7 @@ function App(props) {
                   loading={buying}
                   onClick={async () => {
                     setBuying(true);
-                    await tx(writeContracts.FanSocietyMother.createGeneration(ethers.utils.parseEther(tokenGenFee.value)));
+                    await tx(writeContracts.YourContract.createGeneration(ethers.utils.parseEther(tokenGenFee.value)));
                     setBuying(false);
                   }}
                   disabled={!tokenGenFee.valid}
@@ -406,7 +406,7 @@ function App(props) {
             </Card>
           </div>
           <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
-            <div>New Fan Generation Events:</div>
+            <div>New Token Generation Events:</div>
             <List
               dataSource={newGenEvents}
               renderItem={item => {
@@ -429,7 +429,7 @@ function App(props) {
             */}
 
           <Contract
-            name="FanSocietyMother"
+            name="YourContract"
             price={price}
             signer={userSigner}
             provider={localProvider}

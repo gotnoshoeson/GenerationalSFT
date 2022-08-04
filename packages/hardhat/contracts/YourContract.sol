@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 //import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract FanSocietyMother is ERC1155 {
+contract YourContract is ERC1155 {
     // "_balances" mapping is inherited via ERC1155
     // mapping(uint256 => mapping(address => uint256)) private _balances;
     // "_operatorApproval" mapping is inherited via ERC1155
@@ -18,7 +18,7 @@ contract FanSocietyMother is ERC1155 {
 
     //mapping(uint256 => string) = tokenURI;
 
-    event FanPinMinted(address fanAddress, uint256 generationId, uint256 mintAmount);
+    event TokenMinted(address minterAddress, uint256 generationId, uint256 mintAmount);
     event NewGeneration(address contractAddress, uint256 activeGen);
 
     constructor() ERC1155("") {
@@ -45,7 +45,7 @@ contract FanSocietyMother is ERC1155 {
         _mint(msg.sender, activeGenerationId, amount, "");
         (bool sent, ) = msg.sender.call{value: payment}("");
         require(sent, "Not enough eth sent");
-        emit FanPinMinted(msg.sender, activeGenerationId, payment);
+        emit TokenMinted(msg.sender, activeGenerationId, payment);
      }  
 
     // Raffle based on an array [] of _ids, ie Generation 1 - 3 are included in this raffle, needs an argument for how many winners will be selected
