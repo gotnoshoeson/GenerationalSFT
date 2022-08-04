@@ -28,6 +28,8 @@ contract FanSocietyMother is ERC1155 {
     }
 
     // Create a new fan generation, ie create new _ids, increment current token id variable += 1, require an amount of time from previous generation creation, ie 6 months.
+    // Todo: Create token uri for each generation, add parameter, handle IPFS uploads and validations on frontend
+    // Todo: Make OnlyOwner function
     function createGeneration (uint256 _tokenFee) public {
         activeGenerationId++;
         tokenFee = _tokenFee;

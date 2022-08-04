@@ -1,4 +1,4 @@
-import { Button, Card, Col, Input, List, Menu, Row } from "antd";
+import { Button, Card, Col, Input, List, Menu, Row} from "antd";
 import "antd/dist/antd.css";
 import {
   useBalance,
@@ -19,6 +19,7 @@ import {
   Contract,
   Faucet,
   GasGauge,
+  Generation,
   Header,
   Ramp,
   ThemeSwitch,
@@ -280,6 +281,7 @@ function App(props) {
 
   const currentGeneration = useContractReader(readContracts, "FanSocietyMother", "activeGenerationId");
 
+
   /*const mint = async () => {
     const result = tx(
       writeContracts && writeContracts.FanSocietyMother && writeContracts.FanSocietyMother.mint()
@@ -356,7 +358,8 @@ function App(props) {
               renderItem={item => {
                 return (
                   <List.Item key={item.blockNumber}>
-                    <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} /> =>
+                    <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} /> minted a 
+                    <Generation value={item.args[1]} />Token for
                     <Balance balance={item.args[2]} />
                   </List.Item>
                 );
@@ -366,6 +369,7 @@ function App(props) {
         </Route>
             
         <Route exact path="/owner">
+          <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} />
           <div style={{ padding: 8, marginTop: 32, width: 300, margin: "auto" }}>
             <Card title="Create New Token Generation" extra={<a href="#">code</a>}>
               <div style={{ padding: 8 }}>Current token generation: {currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</div>
@@ -408,7 +412,8 @@ function App(props) {
               renderItem={item => {
                 return (
                   <List.Item key={item.blockNumber}>
-                    <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} /> created Generation #{currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}
+                    <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} /> created 
+                    <Generation value={item.args[1]} />
                   </List.Item>
                 );
               }}

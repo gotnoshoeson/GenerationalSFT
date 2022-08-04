@@ -9,6 +9,7 @@ export { default as EtherInput } from "./EtherInput";
 export { default as Events } from "./Events";
 export { default as Faucet } from "./Faucet";
 export { default as GasGauge } from "./GasGauge";
+export { default as Generation } from "./Generation";
 export { default as Header } from "./Header";
 export { default as Provider } from "./Provider";
 export { default as Ramp } from "./Ramp";
