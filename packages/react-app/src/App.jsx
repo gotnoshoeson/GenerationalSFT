@@ -329,7 +329,7 @@ function App(props) {
           <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} />
 
           {/*BUY SFT UI */}
-          <div style={{ padding: 8, marginTop: 32, width: 300, margin: "auto" }}>
+          <div style={{ padding: 8, marginTop: 32, width: 400, margin: "auto" }}>
             <Card title="Buy Tokens" extra={<a href="#">code</a>}>
               <div style={{ padding: 8 }}>
                 <p>Currently minting generation #{currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</p>
@@ -370,7 +370,7 @@ function App(props) {
             
         <Route exact path="/owner">
           <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} />
-          <div style={{ padding: 8, marginTop: 32, width: 300, margin: "auto" }}>
+          <div style={{ padding: 8, marginTop: 32, width: 400, margin: "auto" }}>
             <Card title="Create New Token Generation" extra={<a href="#">code</a>}>
               <div style={{ padding: 8 }}>Current token generation: {currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</div>
               <div style={{ padding: 8 }}>

@@ -12,7 +12,7 @@ export default function Header({ link, title, subTitle }) {
 }
 
 Header.defaultProps = {
-  link: "https://fansociety.xyz",
-  title: "FanSociety",
-  subTitle: "fan funding for musicians",
+  link: "https://buidlguidl.com",
+  title: "Generational SFT",
+  subTitle: "A Buidl Guidl build",
 };

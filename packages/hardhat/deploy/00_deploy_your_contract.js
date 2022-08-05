@@ -5,12 +5,12 @@ const { ethers } = require("hardhat");
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
-  await deploy("FanSocietyMother", {
+  await deploy("YourContract", {
     from: deployer,
     log: true,
   });
 
-  const fan_society_mother = await ethers.getContract("FanSocietyMother", deployer);
+  const yourContract = await ethers.getContract("YourContract", deployer);
   /*  await YourContract.setPurpose("Hello");
   
     To take ownership of yourContract using the ownable library uncomment next line and add the 
@@ -60,4 +60,4 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   //   console.error(error);
   // }
 };
-module.exports.tags = ["FanSocietyMother"];
+module.exports.tags = ["YourContract"];
