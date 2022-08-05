@@ -12,4 +12,4 @@ The logic of this contract is a break from how NFT contracts are set up.
 
 - Amount of tokens per generation are not predefined and gives the contract owner the flexibility to use for thier specific needs.
 
-The build is presented in it's most basic form and can be hacked to create some very interesting use cases.
+The build is presented in it's most basic form and can be hacked to create some very interesting use cases.# GenerationalSFT
