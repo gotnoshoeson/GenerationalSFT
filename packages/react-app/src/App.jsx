@@ -1,4 +1,4 @@
-import { Button, Card, Col, Input, List, Menu, Row} from "antd";
+import { Button, Card, Col, Divider, Input, List, Menu, Row} from "antd";
 import "antd/dist/antd.css";
 import {
   useBalance,
@@ -16,11 +16,13 @@ import {
   Account,
   Address,
   Balance,
+  Canvas,
   Contract,
   Faucet,
   GasGauge,
   Generation,
   Header,
+  ImageToIPFS,
   Ramp,
   ThemeSwitch,
   NetworkDisplay,
@@ -35,6 +37,7 @@ import { Transactor, Web3ModalSetup } from "./helpers";
 import { Home } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 import { useEventListener } from "eth-hooks/events/useEventListener";
+
 
 const { ethers } = require("ethers");
 /*
@@ -57,7 +60,7 @@ const { ethers } = require("ethers");
 */
 
 /// 📡 What chain are your contracts deployed to?
-const initialNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+const initialNetwork = NETWORKS.rinkeby; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 // 😬 Sorry for all the console logging
 const DEBUG = true;
@@ -370,6 +373,13 @@ function App(props) {
             
         <Route exact path="/owner">
           <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} />
+          <div style={{ padding: 8, marginTop: 32, width: 400, margin: "auto" }}>
+            <Card title="Upload Token URI" extra={<a href="#">code</a>}>
+              <ImageToIPFS />
+              <Divider />
+              {/* <Canvas width="500px" height="500px"/> */}
+            </Card>
+          </div>
           <div style={{ padding: 8, marginTop: 32, width: 400, margin: "auto" }}>
             <Card title="Create New Token Generation" extra={<a href="#">code</a>}>
               <div style={{ padding: 8 }}>Current token generation: {currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</div>

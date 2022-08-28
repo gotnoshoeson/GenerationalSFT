@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { Button, Input, Col, Row, Spin, Card } from 'antd'
+import { Button, Input, Col, Row, Spin, Card } from 'antd';
 
 const { BufferList } = require('bl')
-const ipfsAPI = require('ipfs-http-client');
-const ipfs = ipfsAPI({host: 'ipfs.infura.io', port: '5001', protocol: 'https' });
+const ipfsClient = require('ipfs-http-client');
+
+const { REACT_APP_INFURA_ID, REACT_APP_INFURA_SECRET } = process.env;
+const projectId = REACT_APP_INFURA_ID;
+const projectSecret = REACT_APP_INFURA_SECRET;
+
+const auth =
+    'Basic ' + btoa(projectId + ':' + projectSecret);
+
+const ipfs = ipfsClient.create({
+    host: 'ipfs.infura.io',
+    port: 5001,
+    protocol: 'https',
+    headers: {
+        authorization: auth,
+    },
+});
 
 const DEBUG = true;
 
 //AWS config
-const bucketName = "adaptiveclaim";
-const APIGatewayEndpoint = "https://py1mx7j0eh.execute-api.us-east-1.amazonaws.com/default/getPresignedImageUrl";
+/* const bucketName = "adaptiveclaim";
+const APIGatewayEndpoint = "https://py1mx7j0eh.execute-api.us-east-1.amazonaws.com/default/getPresignedImageUrl"; */
 
 
 export default function ImageToIPFS() {
@@ -48,7 +63,7 @@ export default function ImageToIPFS() {
         }
     }
 
-    useEffect(()=>{
+    /* useEffect(()=>{
         if(ipfsHash) asyncGetFile()
     },[ipfsHash])
 
@@ -65,18 +80,18 @@ export default function ImageToIPFS() {
                 </pre>
             )
         }
-    }
+    } */
 
     // AWS bits:
-    const [ signedURL, setSignedURL ] = useState();
+    const [ signedURL, setSignedURL ] = useState('squirrel');
 
     // When file is selected, get a uploadURL from aws. Use "getPresignedImageUrl" Lambda endpoint URL generated in aws.
     const changeHandler = async (event) => {
 
-        let requestOptions = {
+        /* let requestOptions = {
             method: 'GET',
             redirect: 'follow'
-        };
+        }; */
 
 		setSelectedFile(event.target.files[0]);
         const file = event.target.files[0];
@@ -88,13 +103,13 @@ export default function ImageToIPFS() {
         }
 		setIsSelected(true);
 
-        await fetch(APIGatewayEndpoint, requestOptions)
+        /* await fetch(APIGatewayEndpoint, requestOptions)
         .then(response => response.json())
         .then(result => setSignedURL(result))
-        .catch(error => console.log('error', error));
+        .catch(error => console.log('error', error)); */
 	};
 
-    const handleSubmission = async () => {
+    /* const handleSubmission = async () => {
 
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "image/jpeg");
@@ -120,47 +135,48 @@ export default function ImageToIPFS() {
 	
     if (DEBUG) console.log("Selected File Properties: ", selectedFile)
     if (DEBUG) console.log("Signed url: ", signedURL)
-    if (DEBUG) console.log("AWS PIC URL: ", url)
+    if (DEBUG) console.log("AWS PIC URL: ", url) */
 
     return (
         <div style={{margin:'32px'}}>
 
-            <h1 > Image Handling </h1>
+            <h3 > Image Handling:</h3>
 
             <Row justify="center">
-                <Col span={10}>
+                <Col span={40}>
                     <Input 
                     type="file"
                     accept="image/*"
                     onChange={changeHandler}
                     />
-                    <Button
+                    {/* <Button
                     style={{margin:"18px"}}
                     type="primary"
                     disabled = {!selectedFile}
                     onClick={handleSubmission}
                     >
                     Upload to S3
-                    </Button>
+                    </Button> */}
                     <Button
                     type="primary"
                     disabled={!selectedFile}
                     onClick={ async () => {
                         console.log("UPLOADING...")
-                        console.log(buffer)
                         setSending(true)
                         setIpfsHash()
                         setIpfsContents()
 
-                        const result = await addToIPFS(buffer)
+                        const result = await addToIPFS(selectedFile)
                         if(result && result.path) {
+                            console.log(result)
                             setIpfsHash(result.path)
+                            console.log(ipfsHash)
                         }
                         setSending(false)
                     }}>
                     Upload to IPFS
                     </Button>
-                    {isSelected && signedURL ? (
+                    {/* {isSelected && signedURL ? (
                         <div>
                             <p>Filename: {selectedFile.name}</p>
                             <p>Filetype: {selectedFile.type}</p>
@@ -172,12 +188,12 @@ export default function ImageToIPFS() {
                         </div>
                     ) : (
                         <p>Select a file to show details</p>
-                    )}
+                    )} */}
                 </Col>
             </Row>
                         
             <Row justify="center" >
-                <Col span={10}>
+                {/* <Col span={10}>
                     <Card >
                         <img src={url} style={{width:"300px"}}/>
                     </Card>
@@ -189,8 +205,8 @@ export default function ImageToIPFS() {
                     ) : (
                         <p>For preview, click 'Upload to S3'.</p>
                     )}
-                </Col>
-                <Col span={10}>
+                </Col> */}
+                <Col span={100}>
                     <Card >
                         {ipfsHash ? (
                             <img src={"https://ipfs.io/ipfs/"+ipfsHash} style={{width:"300px"}}/>
