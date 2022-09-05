@@ -16,7 +16,6 @@ import {
   Account,
   Address,
   Balance,
-  Canvas,
   Contract,
   Faucet,
   GasGauge,
@@ -37,7 +36,6 @@ import { Transactor, Web3ModalSetup } from "./helpers";
 import { Home } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 import { useEventListener } from "eth-hooks/events/useEventListener";
-
 
 const { ethers } = require("ethers");
 /*
@@ -60,7 +58,7 @@ const { ethers } = require("ethers");
 */
 
 /// 📡 What chain are your contracts deployed to?
-const initialNetwork = NETWORKS.rinkeby; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+const initialNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 // 😬 Sorry for all the console logging
 const DEBUG = true;
@@ -283,8 +281,11 @@ function App(props) {
   const newGenEvents = useEventListener(readContracts, 'YourContract', 'NewGeneration', localProvider, 1);
 
   const currentGeneration = useContractReader(readContracts, "YourContract", "activeGenerationId");
+  const currentGenUri = useContractReader(readContracts, "YourContract", "uri", [currentGeneration]);
+  console.log("Current Generation URI");
+  console.log(currentGenUri);
 
-
+ 
   /*const mint = async () => {
     const result = tx(
       writeContracts && writeContracts.YourContract && writeContracts.YourContract.mint()
@@ -373,14 +374,20 @@ function App(props) {
             
         <Route exact path="/owner">
           <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} />
-          <div style={{ padding: 8, marginTop: 32, width: 400, margin: "auto" }}>
+          <div style={{ padding: 8, marginTop: 32, width: 500, margin: "auto" }}>
             <Card title="Upload Token URI" extra={<a href="#">code</a>}>
-              <ImageToIPFS />
+              <ImageToIPFS
+                value={currentGeneration}
+                tx={tx}
+                readContracts={readContracts}
+                writeContracts={writeContracts}
+                tokenFee={tokenFee}
+              />
               <Divider />
               {/* <Canvas width="500px" height="500px"/> */}
             </Card>
           </div>
-          <div style={{ padding: 8, marginTop: 32, width: 400, margin: "auto" }}>
+{/*           <div style={{ padding: 8, marginTop: 32, width: 500, margin: "auto" }}>
             <Card title="Create New Token Generation" extra={<a href="#">code</a>}>
               <div style={{ padding: 8 }}>Current token generation: {currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</div>
               <div style={{ padding: 8 }}>
@@ -414,7 +421,7 @@ function App(props) {
                 </Button>
               </div>
             </Card>
-          </div>
+          </div> */}
           <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
             <div>New Token Generation Events:</div>
             <List

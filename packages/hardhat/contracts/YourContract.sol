@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
 //import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract YourContract is ERC1155 {
+contract YourContract is ERC1155URIStorage {
     // "_balances" mapping is inherited via ERC1155
     // mapping(uint256 => mapping(address => uint256)) private _balances;
     // "_operatorApproval" mapping is inherited via ERC1155
     // mapping(address => mapping(address => bool)) private _operatorApprovals;
-    // Below is used as the URI for all token types relying on ID substitution, e.g. https://ipfs/<hash>/{id}.json
-    // string private _uri;
 
     uint256 public activeGenerationId = 0; 
     uint256 public tokenFee = 1 * 10 ** 17 ;
@@ -22,18 +20,18 @@ contract YourContract is ERC1155 {
     event NewGeneration(address contractAddress, uint256 activeGen);
 
     constructor() ERC1155("") {
-        // TO DO:
-        // Set tokenFee to .1 ETH
-        //tokenFee == 1 * 10**(18-1);
+        // Set Base URI at deployment
+        _setBaseURI("://ipfs.io/ipfs/");
     }
 
     // Create a new fan generation, ie create new _ids, increment current token id variable += 1, require an amount of time from previous generation creation, ie 6 months.
     // Todo: Create token uri for each generation, add parameter, handle IPFS uploads and validations on frontend
     // Todo: Make OnlyOwner function
-    function createGeneration (uint256 _tokenFee) public {
+    function createGeneration (uint256 _tokenFee, string memory _tokenUri) public {
         activeGenerationId++;
         tokenFee = _tokenFee;
         // include tokenURI setting
+        _setURI(activeGenerationId, _tokenUri);
         emit NewGeneration(address(this) , activeGenerationId);
     }
 

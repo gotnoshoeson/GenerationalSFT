@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Button, Input, Col, Row, Spin, Card } from 'antd';
+import React, { useState } from "react";
+import { Button, Input, Col, Row, Spin, Card, Form } from 'antd';
 
-const { BufferList } = require('bl')
+const { ethers } = require("ethers");
+const { BufferList } = require('bl');
 const ipfsClient = require('ipfs-http-client');
 
 const { REACT_APP_INFURA_ID, REACT_APP_INFURA_SECRET } = process.env;
@@ -20,35 +21,45 @@ const ipfs = ipfsClient.create({
     },
 });
 
-const DEBUG = true;
 
-//AWS config
-/* const bucketName = "adaptiveclaim";
-const APIGatewayEndpoint = "https://py1mx7j0eh.execute-api.us-east-1.amazonaws.com/default/getPresignedImageUrl"; */
-
-
-export default function ImageToIPFS() {
-
+export default function ImageToIPFS(props) {
+    const currentGeneration = ethers.utils.formatUnits(props.value, 0);
+    const tx = props.tx;
+    const tokenFee = props.tokenFee;
+    const readContracts = props.readContracts;
+    const writeContracts = props.writeContracts;
     const [ selectedFile, setSelectedFile ] = useState();
 	const [ isSelected, setIsSelected ] = useState(false);
-    const [ url, setURL ] = useState("");
-    const [ uploadToS3Clicked, setUploadToS3Clicked ] = useState(false)
+    //const [ url, setURL ] = useState("");
+    const [tokenGenFee, setTokenGenFee] = useState({
+        valid: false,
+        value: ''
+      });
+    // borrowed from other project, remove later
+    const [buying, setBuying] = useState();
 
     // IPFS Bits:
     const [ sending, setSending ] = useState()
     const [ ipfsHash, setIpfsHash ] = useState()
-    const [ ipfsContents, setIpfsContents ] = useState()
+    const [ ipfsMetadataHash, setIpfsMetadataHash ] = useState()
+    //const [ ipfsContents, setIpfsContents ] = useState()
     const [ buffer, setBuffer ] = useState()
+
+    const metaData = {
+        name: "FanSociety",
+        description: "Generation #"+String(currentGeneration),
+        image: "://ipfs/"+String(ipfsHash)
+    }
 
     const addToIPFS = async (fileToUpload) => {
         const result = await ipfs.add(fileToUpload)
         return result
     }
 
-    const asyncGetFile = async ()=>{
+/*     const asyncGetFile = async ()=>{
         let result = await getFromIPFS(ipfsHash)
         setIpfsContents(result.toString())
-    }
+    } */
 
     const getFromIPFS = async hashToGet => {
         for await (const file of ipfs.get(hashToGet)) {
@@ -82,16 +93,7 @@ export default function ImageToIPFS() {
         }
     } */
 
-    // AWS bits:
-    const [ signedURL, setSignedURL ] = useState('squirrel');
-
-    // When file is selected, get a uploadURL from aws. Use "getPresignedImageUrl" Lambda endpoint URL generated in aws.
     const changeHandler = async (event) => {
-
-        /* let requestOptions = {
-            method: 'GET',
-            redirect: 'follow'
-        }; */
 
 		setSelectedFile(event.target.files[0]);
         const file = event.target.files[0];
@@ -102,121 +104,101 @@ export default function ImageToIPFS() {
             console.log("buffer: ", buffer)
         }
 		setIsSelected(true);
-
-        /* await fetch(APIGatewayEndpoint, requestOptions)
-        .then(response => response.json())
-        .then(result => setSignedURL(result))
-        .catch(error => console.log('error', error)); */
 	};
-
-    /* const handleSubmission = async () => {
-
-        var myHeaders = new Headers();
-        myHeaders.append("Content-Type", "image/jpeg");
-
-        let requestOptions2 = {
-            method: 'PUT',
-            headers: myHeaders,
-            body: selectedFile,
-            redirect: 'follow'
-        };
-
-        await fetch(signedURL.uploadURL, requestOptions2)
-        .then(response => response.text())
-        .then(result => console.log(result))
-        .catch(error => console.log('error', error));
-
-        setUploadToS3Clicked(true)
-	};
-
-    useEffect(()=>{
-        if(signedURL) setURL("https://"+bucketName+".s3.amazonaws.com/"+signedURL.Key)
-    },[uploadToS3Clicked])
-	
-    if (DEBUG) console.log("Selected File Properties: ", selectedFile)
-    if (DEBUG) console.log("Signed url: ", signedURL)
-    if (DEBUG) console.log("AWS PIC URL: ", url) */
 
     return (
         <div style={{margin:'32px'}}>
-
             <h3 > Image Handling:</h3>
-
-            <Row justify="center">
-                <Col span={40}>
+                <Form>
                     <Input 
                     type="file"
                     accept="image/*"
                     onChange={changeHandler}
                     />
-                    {/* <Button
-                    style={{margin:"18px"}}
-                    type="primary"
-                    disabled = {!selectedFile}
-                    onClick={handleSubmission}
-                    >
-                    Upload to S3
-                    </Button> */}
                     <Button
                     type="primary"
                     disabled={!selectedFile}
                     onClick={ async () => {
                         console.log("UPLOADING...")
                         setSending(true)
-                        setIpfsHash()
-                        setIpfsContents()
+                        console.log(currentGeneration)
 
                         const result = await addToIPFS(selectedFile)
                         if(result && result.path) {
                             console.log(result)
+                            console.log(result.path)
                             setIpfsHash(result.path)
-                            console.log(ipfsHash)
                         }
                         setSending(false)
                     }}>
-                    Upload to IPFS
+                    Upload Image to IPFS
                     </Button>
-                    {/* {isSelected && signedURL ? (
-                        <div>
-                            <p>Filename: {selectedFile.name}</p>
-                            <p>Filetype: {selectedFile.type}</p>
-                            <p>Size in bytes: {selectedFile.size}</p>
-                            <p>
-                                lastModifiedDate:{' '}
-                                {selectedFile.lastModifiedDate.toLocaleDateString()}
-                            </p>
-                        </div>
-                    ) : (
-                        <p>Select a file to show details</p>
-                    )} */}
-                </Col>
-            </Row>
-                        
+                    <Button
+                    type="primary"
+                    disabled={!selectedFile}
+                    onClick={ async () => {
+                        console.log("UPLOADING...")
+                        setSending(true)
+
+                        const json = JSON.stringify(metaData)
+                        const metaDataResult = await addToIPFS(json)
+                        if(metaDataResult && metaDataResult.path) {
+                            console.log(metaDataResult)
+                            setIpfsMetadataHash(metaDataResult.path)
+                        }
+                        setSending(false)
+                    }}>
+                    Upload Metadata to IPFS
+                    </Button>
+                </Form>
+                         
             <Row justify="center" >
-                {/* <Col span={10}>
-                    <Card >
-                        <img src={url} style={{width:"300px"}}/>
-                    </Card>
-                    {signedURL ? (
-                        <div >
-                            <p>SignedUrl: {signedURL.uploadURL.slice(0,50)+"..."}</p>
-                            <p>Key: {signedURL.Key}</p>
-                        </div>
-                    ) : (
-                        <p>For preview, click 'Upload to S3'.</p>
-                    )}
-                </Col> */}
                 <Col span={100}>
                     <Card >
                         {ipfsHash ? (
-                            <img src={"https://ipfs.io/ipfs/"+ipfsHash} style={{width:"300px"}}/>
+                            <img src={"https://ipfs.io/ipfs/"+ipfsHash} style={{width:"200px"}}/>
                         ) : (
                             <p >{""}</p>
                         )}
                     </Card>
-                    <a href={"https://ipfs.io/ipfs/"+ipfsHash} target="blank">{ipfsHash}</a>
+                </Col>
+                <Col span={100}>
+                    <div><a href={"https://ipfs.io/ipfs/"+ipfsHash} target="blank">{ipfsHash}</a></div>
+                    <div><a href={"https://ipfs.io/ipfs/"+ipfsMetadataHash} target="blank">{ipfsMetadataHash}</a></div>
                 </Col>
             </Row>
+            <div style={{ padding: 8 }}>Current token generation: {currentGeneration && ethers.utils.formatUnits(currentGeneration, 0)}</div>
+              <div style={{ padding: 8 }}>
+                <Input
+                  style={{ textAlign: "center" }}
+                  placeholder={"new generation token fee"}
+                  value={tokenGenFee.value}
+                  onChange={e => {
+                    const newValue = e.target.value.startsWith(".") ? "0." : e.target.value;
+                    const buyAmount = {
+                      value: newValue,
+                      valid: /^\d*\.?\d+$/.test(newValue)
+                    }
+                    setTokenGenFee(buyAmount);
+                  }}
+                />
+              </div>
+
+              <div style={{ padding: 8 }}>
+                <Button
+                  type={"primary"}
+                  loading={buying}
+                  onClick={async () => {
+                    setBuying(true);
+                    await tx(writeContracts.YourContract.createGeneration(ethers.utils.parseEther(tokenGenFee.value), ipfsMetadataHash));
+                    setBuying(false);
+                  }}
+                  disabled={!tokenGenFee.valid}
+                >
+                  Create New Gen
+                </Button>
+              </div>
         </div>
+        
     );
 }
